@@ -13,7 +13,7 @@
             "justMyCode": true,
             "args": [
                 "run",
-                "app.py"
+                "Home.py"
             ]
         }
     ]

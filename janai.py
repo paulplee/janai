@@ -10,9 +10,14 @@ class JanAI:
     def __init__(self, model: str = model):
         self.model = model
         
-    def list_files(files):
+class JanAI:
+    def __init__(self, model: str = model):
+        self.model = model
+
+    def list_files(self):
+        files_response = client.files.list()  # Assuming this is how you fetch files
         file_list = []
-        for file in files.data:
+        for file in files_response.data:
             f = File(
                 id=file.id,
                 object_type=file.object,
@@ -31,7 +36,19 @@ class JanAI:
             file_list.append(f)
         return file_list
 
-    def retrieve_file(file_id):
+    def create_file(name, purpose=None):
+        file = client.files.create(name=name, purpose=purpose)
+        f = File(
+            id=file.id,
+            object_type=file.object,
+            bytes=file.bytes,
+            created_at=file.created_at,
+            filename=file.filename,
+            purpose=file.purpose
+        )
+        return f
+
+    def retrieve_file(self, file_id):
         file = client.files.retrieve(file_id)
         f = File(
             id=file.id,
@@ -43,6 +60,8 @@ class JanAI:
         )
         return f
 
+    def delete_file(self, file_id):
+        client.files.delete(file_id)
         
     def list_vector_stores(self):
         vector_stores = client.beta.vector_stores.list()
@@ -84,18 +103,3 @@ class JanAI:
     def delete_vector_store(self, vector_store_id):
         client.beta.vector_stores.delete(vector_store_id)
     
-# janai = JanAI()
-
-# vector_stores = janai.list_vector_stores(client.beta.vector_stores.list())
-# print(f"Total Vector Stores: {len(vector_stores)}")
-
-# files = janai.list_files(client.files.list())
-# print(f"Total Files: {len(files)}")
-
-# file = janai.retrieve_file(files[0].id)
-# print(file)
-# timestamp = file.created_at
-# human_readable_timestamp = datetime.fromtimestamp(timestamp, tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-
-# file_content = client.files.content(file_id="file-5rLE7rImDHk9ibUT0zBYzBgJ")
-# file_content.text

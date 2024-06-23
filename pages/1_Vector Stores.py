@@ -13,14 +13,22 @@ def display_vector_stores():
     gb = GridOptionsBuilder.from_dataframe(df)
     grid_options = gb.build()
     grid_options['rowSelection'] = 'multiple'
-    grid_response = AgGrid(df, gridOptions=grid_options, height=300, width='100%', update_mode='MODEL_CHANGED', fit_columns_on_grid_load=True)
+
+    # Calculate dynamic height
+    base_height_per_row = 30  # Example height per row in pixels
+    header_height = 60  # Approximate height for headers and padding
+    dynamic_height = min(max(len(df) * base_height_per_row + header_height, 100), 600)  # Set min and max height
+
+    grid_response = AgGrid(df, gridOptions=grid_options, height=dynamic_height, width='100%', update_mode='MODEL_CHANGED', fit_columns_on_grid_load=True)
     return grid_response
 
 def refresh_vector_stores():
     st.session_state.vector_stores = st.session_state.janai.list_vector_stores()
-    # This will trigger a rerender of the grid by updating the session state
+    # Explicitly trigger a rerender of the grid by toggling the update_grid state
     st.session_state.update_grid = not st.session_state.update_grid
-
+    # Force Streamlit to rerender the page, which includes the grid
+    st.experimental_rerun()
+    
 def create_vector_store_action():
     user_input = st.session_state.user_input
     if user_input:
@@ -36,7 +44,11 @@ def main():
         st.session_state.vector_stores = st.session_state.janai.list_vector_stores()
     if 'update_grid' not in st.session_state:
         st.session_state.update_grid = True  # Initialize the trigger for updating the grid
-
+   # Example of making grid display dependent on update_grid
+    if st.session_state.update_grid:
+        # This is a dummy operation to make the grid's rendering logic dependent on update_grid
+        pass
+    
     st.write("# JanAI")
     st.write("## List of Vector Stores")
     # Store grid response in session state

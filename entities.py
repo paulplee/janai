@@ -7,6 +7,16 @@ class File:
         self.filename = filename
         self.purpose = purpose
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'object_type': self.object_type,
+            'bytes': self.bytes,
+            'created_at': self.created_at,
+            'filename': self.filename,
+            'purpose': self.purpose
+        }
+        
     def __repr__(self):
         return (f"File(id='{self.id}', object='{self.object_type}', bytes={self.bytes}, "
                 f"created_at={self.created_at}, filename='{self.filename}', purpose='{self.purpose}')")
@@ -24,10 +34,6 @@ class VectorStore:
         self.expires_after = expires_after  # This should be an instance of ExpiresAfter
         self.expires_at = expires_at
 
-
-    def __repr__(self):
-        return f"VectorStore(id='{self.id}', created_at={self.created_at}, name='{self.name}', status='{self.status}')"
-
     def to_dict(self):
         return {
             "id": self.id,
@@ -41,6 +47,9 @@ class VectorStore:
             "expires_after": self.expires_after.to_dict() if self.expires_after else None,
             "expires_at": self.expires_at
         }
+
+    def __repr__(self):
+        return f"VectorStore(id='{self.id}', created_at={self.created_at}, name='{self.name}', status='{self.status}')"
         
 class FileCounts:
     def __init__(self, in_progress, completed, failed, cancelled, total):
