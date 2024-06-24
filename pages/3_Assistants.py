@@ -41,30 +41,42 @@ def main():
         st.session_state.assistants = st.session_state.janai.list_assistants(order='asc', limit=100)
     if 'update_grid' not in st.session_state:
         st.session_state.update_grid = True  # Initialize the trigger for updating the grid
-   # Example of making grid display dependent on update_grid
-    if st.session_state.update_grid:
-        # This is a dummy operation to make the grid's rendering logic dependent on update_grid
-        pass
+
+    # Split the screen into two columns
+    col1, col2 = st.columns([4, 6])
     
-    st.write("# JanAI")
-    st.write("## List of Assistants")
-    # Store grid response in session state
-    st.session_state.grid_response = display_assistants()
-    num_assistants = len(st.session_state.assistants)
-    st.write(f"Number of assistants: {num_assistants}")
+    with col1:
+        # Store grid response in session state
+        st.write("## List of Assistants")
+        st.session_state.grid_response = display_assistants()
 
-    if st.button('Delete Selected'):
-        # Access grid_response from session state
-        selected_rows = st.session_state.grid_response['selected_rows']
-        if not selected_rows.empty:
-            deleted_ids = [row['id'] for index, row in selected_rows.iterrows() if 'id' in row]
-            for row_id in deleted_ids:
-                st.session_state.janai.delete_assistant(row_id)
-            st.write("Deleted Vector Store IDs:", deleted_ids)
-            refresh_assistants()
-        else:
-            st.write("No rows selected for deletion.")
+        num_assistants = len(st.session_state.assistants)
+        st.write(f"Number of assistants: {num_assistants}")
 
+        if st.button('Delete Selected'):
+            # Access grid_response from session state
+            if 'selected_rows' in st.session_state.grid_response and st.session_state.grid_response['selected_rows'] is not None:
+                selected_rows = st.session_state.grid_response['selected_rows']
+                if not selected_rows.empty:
+                    deleted_ids = [row['id'] for index, row in selected_rows.iterrows() if 'id' in row]
+                    for row_id in deleted_ids:
+                        st.session_state.janai.delete_assistant(row_id)
+                    st.write("Deleted Vector Store IDs:", deleted_ids)
+                    refresh_assistants()
+                else:
+                    st.write("No rows selected for deletion.")
+
+
+    with col2:
+    # Check if any row is selected
+        if 'selected_rows' in st.session_state.grid_response and st.session_state.grid_response['selected_rows'] is not None:
+            selected_rows = st.session_state.grid_response['selected_rows']
+            if not selected_rows.empty:
+                # Assuming only one row can be selected for displaying details
+                selected_row = selected_rows.iloc[0]
+                # Display the details of the selected assistant
+                st.write("## Assistant Details")
+                st.table(selected_row)
 
 if __name__ == '__main__':
     main()
