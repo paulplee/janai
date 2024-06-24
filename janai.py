@@ -26,13 +26,13 @@ class JanAI:
                 filename=file.filename,
                 purpose=file.purpose
             )
-            print(f"ID: {file.id}")
-            print(f"Object Type: {file.object}")
-            print(f"Bytes: {file.bytes}")
-            print(f"Created At: {file.created_at}")
-            print(f"Filename: {file.filename}")
-            print(f"Purpose: {file.purpose}")
-            print("----------")
+            # print(f"ID: {file.id}")
+            # print(f"Object Type: {file.object}")
+            # print(f"Bytes: {file.bytes}")
+            # print(f"Created At: {file.created_at}")
+            # print(f"Filename: {file.filename}")
+            # print(f"Purpose: {file.purpose}")
+            # print("----------")
             file_list.append(f)
         return file_list
 
@@ -103,3 +103,12 @@ class JanAI:
     def delete_vector_store(self, vector_store_id):
         client.beta.vector_stores.delete(vector_store_id)
     
+    def list_assistants(self, limit=None, order=None, after=None, before=None):
+        assistants = client.beta.assistants.list(limit=limit, order=order, after=after, before=before)
+        assistant_list = []
+        for assistant in assistants.data:
+            assistant_list.append(assistant)
+        return assistant_list
+    
+    def delete_assistant(self, assistant_id):
+        client.beta.assistants.delete(assistant_id)

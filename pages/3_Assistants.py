@@ -3,8 +3,8 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 import pandas as pd
 from janai import JanAI
 
-def display_files():
-    df = pd.DataFrame([file.to_dict() for file in st.session_state.files])
+def display_assistants():
+    df = pd.DataFrame([assistant.to_dict() for assistant in st.session_state.assistants])
     gb = GridOptionsBuilder.from_dataframe(df)
     grid_options = gb.build()
     grid_options['rowSelection'] = 'multiple'
@@ -17,8 +17,8 @@ def display_files():
     grid_response = AgGrid(df, gridOptions=grid_options, height=dynamic_height, width='100%', update_mode='MODEL_CHANGED', fit_columns_on_grid_load=True)
     return grid_response
 
-def refresh_files():
-    st.session_state.files = st.session_state.janai.list_files()
+def refresh_assistants():
+    st.session_state.assistants = st.session_state.janai.list_assistants(order='asc', limit=100)
     # Explicitly trigger a rerender of the grid by toggling the update_grid state
     st.session_state.update_grid = not st.session_state.update_grid
     # Force Streamlit to rerender the page, which includes the grid
@@ -28,8 +28,8 @@ def refresh_files():
 def main():
     if 'janai' not in st.session_state:
         st.session_state.janai = JanAI()
-    if 'files' not in st.session_state:
-        st.session_state.files = st.session_state.janai.list_files()
+    if 'assistants' not in st.session_state:
+        st.session_state.assistants = st.session_state.janai.list_assistants(order='asc', limit=100)
     if 'update_grid' not in st.session_state:
         st.session_state.update_grid = True  # Initialize the trigger for updating the grid
    # Example of making grid display dependent on update_grid
@@ -38,11 +38,11 @@ def main():
         pass
     
     st.write("# JanAI")
-    st.write("## List of Files")
+    st.write("## List of Assistants")
     # Store grid response in session state
-    st.session_state.grid_response = display_files()
-    num_files = len(st.session_state.files)
-    st.write(f"Number of files: {num_files}")
+    st.session_state.grid_response = display_assistants()
+    num_assistants = len(st.session_state.assistants)
+    st.write(f"Number of assistants: {num_assistants}")
 
     if st.button('Delete Selected'):
         # Access grid_response from session state
@@ -50,9 +50,9 @@ def main():
         if not selected_rows.empty:
             deleted_ids = [row['id'] for index, row in selected_rows.iterrows() if 'id' in row]
             for row_id in deleted_ids:
-                st.session_state.janai.delete_file(row_id)
+                st.session_state.janai.delete_assistant(row_id)
             st.write("Deleted Vector Store IDs:", deleted_ids)
-            refresh_files()
+            refresh_assistants()
         else:
             st.write("No rows selected for deletion.")
 

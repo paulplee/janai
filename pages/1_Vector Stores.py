@@ -3,11 +3,6 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 import pandas as pd
 from janai import JanAI
 
-import warnings
-
-# Suppress future warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
-
 def display_vector_stores():
     df = pd.DataFrame([vector_store.to_dict() for vector_store in st.session_state.vector_stores])
     gb = GridOptionsBuilder.from_dataframe(df)
@@ -27,7 +22,7 @@ def refresh_vector_stores():
     # Explicitly trigger a rerender of the grid by toggling the update_grid state
     st.session_state.update_grid = not st.session_state.update_grid
     # Force Streamlit to rerender the page, which includes the grid
-    st.experimental_rerun()
+    st.rerun()
     
 def create_vector_store_action():
     user_input = st.session_state.user_input
