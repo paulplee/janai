@@ -2,9 +2,18 @@ import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
 import pandas as pd
 from janai import JanAI
+from datetime import datetime, timezone
 
 def display_assistants():
-    df = pd.DataFrame([assistant.to_dict() for assistant in st.session_state.assistants])
+    # Convert each assistant to a dict and filter for specific columns
+    assistants_data = [{
+        'id': assistant.id,  # Use dot notation to access attributes
+        'created_at': datetime.fromtimestamp(assistant.created_at, timezone.utc).strftime('%d/%m/%y %H:%M'),  # Convert timestamp to DDMMYY using timezone-aware datetime
+        'instructions': assistant.instructions,
+        'name': assistant.name
+    } for assistant in st.session_state.assistants]
+    
+    df = pd.DataFrame(assistants_data)
     gb = GridOptionsBuilder.from_dataframe(df)
     grid_options = gb.build()
     grid_options['rowSelection'] = 'multiple'
