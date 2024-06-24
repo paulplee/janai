@@ -81,9 +81,9 @@ class ExpiresAfter:
         
         
 class Assistant:
-    def __init__(self, id, object_type, created_at, name, description, model, instructions, tools, metadata, top_p, temperature, response_format):
+    def __init__(self, id, object, created_at, name, description, model, instructions, tools, metadata, top_p, temperature, response_format):
         self.id = id
-        self.object_type = object_type
+        self.object = object
         self.created_at = created_at
         self.name = name
         self.description = description
@@ -98,7 +98,7 @@ class Assistant:
     def to_dict(self):
         return {
             "id": self.id,
-            "object": self.object_type,
+            "object": self.object,
             "created_at": self.created_at,
             "name": self.name,
             "description": self.description,
@@ -112,5 +112,5 @@ class Assistant:
         }
 
     def __repr__(self):
-        return (f"Assistant(id='{self.id}', object='{self.object_type}', created_at={self.created_at}, "
+        return (f"Assistant(id='{self.id}', object='{self.object}', created_at={self.created_at}, "
                 f"name='{self.name}', model='{self.model}', instructions='{self.instructions}')")

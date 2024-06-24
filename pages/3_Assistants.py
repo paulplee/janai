@@ -43,7 +43,7 @@ def main():
         st.session_state.update_grid = True  # Initialize the trigger for updating the grid
 
     # Split the screen into two columns
-    col1, col2 = st.columns([4, 6])
+    col1, col2 = st.columns([35, 65])
     
     with col1:
         # Store grid response in session state
@@ -66,17 +66,34 @@ def main():
                 else:
                     st.write("No rows selected for deletion.")
 
-
     with col2:
-    # Check if any row is selected
+        # Check if any row is selected
         if 'selected_rows' in st.session_state.grid_response and st.session_state.grid_response['selected_rows'] is not None:
             selected_rows = st.session_state.grid_response['selected_rows']
             if not selected_rows.empty:
                 # Assuming only one row can be selected for displaying details
                 selected_row = selected_rows.iloc[0]
-                # Display the details of the selected assistant
-                st.write("## Assistant Details")
-                st.table(selected_row)
+                assistant_id = selected_row['id']  # Get the ID of the selected assistant
+                
+                # Find the assistant object with the matching ID
+                matching_assistant = next((assistant for assistant in st.session_state.assistants if assistant.id == assistant_id), None)
+                
+                # Display the details of the matching assistant
+                if matching_assistant:
+                    st.write("## Assistant Details")
+                    # Display all properties of the Assistant object
+                    st.write(f"ID: {matching_assistant.id}")
+                    st.write(f"Object: {matching_assistant.object}")
+                    st.write(f"Created At: {matching_assistant.created_at}")
+                    st.write(f"Name: {matching_assistant.name}")
+                    st.write(f"Description: {matching_assistant.description}")
+                    st.write(f"Model: {matching_assistant.model}")
+                    st.write(f"Instructions: {matching_assistant.instructions}")
+                    st.write(f"Tools: {matching_assistant.tools}")
+                    st.write(f"Metadata: {matching_assistant.metadata}")
+                    st.write(f"Top P: {matching_assistant.top_p}")
+                    st.write(f"Temperature: {matching_assistant.temperature}")
+                    st.write(f"Response Format: {matching_assistant.response_format}")
 
 if __name__ == '__main__':
     main()
