@@ -110,5 +110,16 @@ class JanAI:
             assistant_list.append(assistant)
         return assistant_list
     
+    def create_assistant(self, model, name=None, description=None, instructions=None, tools=None, tool_resources=None, temperature=1.0, top_p=1.0, metadata=None, response_format=None):
+        assistant = client.beta.assistants.create(
+            name=name, 
+            model=model, 
+            description=description, 
+            instructions=instructions, 
+            temperature=temperature, 
+            top_p=top_p, 
+        )
+        return assistant
+    
     def delete_assistant(self, assistant_id):
         client.beta.assistants.delete(assistant_id)

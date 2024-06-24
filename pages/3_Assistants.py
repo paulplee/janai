@@ -4,6 +4,45 @@ import pandas as pd
 from janai import JanAI
 from datetime import datetime, timezone
 
+def display_form():
+    # Display the form for creating a new assistant
+    model = st.selectbox("Model", ["gpt-4o", "gpt-3.5-turbo"])
+    name = st.text_input("Name", value="", placeholder="Optional")
+    description = st.text_input("Description", value="", placeholder="Optional")
+    instructions = st.text_area("Instructions", value="", placeholder="Optional")
+    tools_options = {
+        "None": [],
+        "code_interpreter": [{"type": "code_interpreter"}],
+        "file_search": [{"type": "file_search"}],
+        "function": [{"type": "function"}]
+    }
+
+    tools = st.selectbox(
+        "Tools",
+        options=list(tools_options.values()),  # Pass the values as options
+        format_func=lambda x: [k for k, v in tools_options.items() if v == x][0]  # Use the keys as labels
+    )
+    tool_resources = st.text_input("Tool Resource", value="", placeholder="Optional")
+    temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=1.0, step=0.01)
+    top_p = st.slider("Top P", min_value=0.0, max_value=1.0, value=1.0, step=0.01)
+    response_format = st.text_input("Response Format", value="", placeholder="Optional")
+
+    # Add a submit button (optional, depending on your requirements)
+    if st.button("Create Assistant"):
+        st.session_state.janai.create_assistant(
+            model=model,
+            name=name,
+            description=description,
+            instructions=instructions,
+            tools=tools,
+            tool_resources=tool_resources,
+            temperature=temperature,
+            top_p=top_p,
+            response_format=response_format
+        )
+        st.session_state.creation_mode = False
+        refresh_assistants()
+        
 def display_assistants():
     assistants_data = [{
         'id': assistant.id,
@@ -23,6 +62,11 @@ def display_assistants():
 
     # Use the grid_key from session state to force rerendering when needed
     grid_response = AgGrid(df, gridOptions=grid_options, height=dynamic_height, width='100%', update_mode='MODEL_CHANGED', fit_columns_on_grid_load=True, key=st.session_state.grid_key)
+    
+    # Check if 'selected_rows' is not None and then if any row is selected
+    if grid_response.get('selected_rows') is not None and len(grid_response['selected_rows']) > 0:
+        st.session_state.creation_mode = False       
+        st.session_state.creation_mode = False        
     return grid_response
 
 def refresh_assistants():
@@ -68,8 +112,8 @@ def main():
 
     with col2:
         if 'creation_mode' in st.session_state and st.session_state.creation_mode:
-            st.write("CREATING ASSISTANT")
-            st.session_state.creation_mode = False
+            display_form()
+            
         else:
             if 'selected_rows' in st.session_state.grid_response and st.session_state.grid_response['selected_rows'] is not None:
                 selected_rows = st.session_state.grid_response['selected_rows']
