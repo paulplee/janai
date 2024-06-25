@@ -129,6 +129,7 @@ class JanAI:
             description=description, 
             instructions=instructions, 
             temperature=temperature, 
+            tools=tools,
             top_p=top_p, 
         )
         return assistant

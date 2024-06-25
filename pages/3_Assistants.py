@@ -4,6 +4,8 @@ import pandas as pd
 from janai import JanAI
 from datetime import datetime, timezone
 
+
+
 def display_form(assistant=None):
     # Initialize default values
     default_values = {
@@ -78,6 +80,18 @@ def display_form(assistant=None):
     top_p = st.slider("Top P", min_value=0.0, max_value=1.0, value=default_values["top_p"], step=0.01)
     response_format = st.text_input("Response Format", value=default_values["response_format"])
 
+    def generate_tools_string():
+        if file_search_selected and code_interpreter_selected:
+            tools_str = '[{"type": "code_interpreter"}, {"type": "file_search"}]'
+        elif file_search_selected:
+            tools_str = '[{"type": "file_search"}]'
+        elif code_interpreter_selected:
+            tools_str = '[{"type": "code_interpreter"}]'
+        else:
+            tools_str = '[]'
+        return tools_str
+
+
     if st.session_state.creation_mode:
         if st.button("Create Assistant"):
             st.session_state.janai.create_assistant(
@@ -85,7 +99,7 @@ def display_form(assistant=None):
                 name=name,
                 description=description,
                 instructions=instructions,
-                tools=tools,
+                tools=generate_tools_string(),
                 tool_resources=tool_resources,
                 temperature=temperature,
                 top_p=top_p,
@@ -95,13 +109,14 @@ def display_form(assistant=None):
             refresh_assistants()
     else:
         if st.button("Update Assistant"):
+            tool_str = '';
             st.session_state.janai.update_assistant(
                 assistant_id=assistant.id,
                 model=model,
                 name=name,
                 description=description,
                 instructions=instructions,
-                tools=tools,
+                tools=generate_tools_string(),
                 tool_resources=tool_resources,
                 temperature=temperature,
                 top_p=top_p,
