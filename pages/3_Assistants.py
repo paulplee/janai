@@ -17,27 +17,36 @@ def display_form(assistant=None):
         "top_p": 1.0,
         "response_format": ""
     }
+    
+    tools_array = []
 
     # If an assistant is provided, use its properties for default values
     if assistant:
+        # Convert each tool object to a dictionary with a 'type' key
+        tools_array = [{"type": tool.type} for tool in assistant.tools] if assistant.tools else []
+
         default_values.update({
             "model": assistant.model,
             "name": assistant.name,
             "description": assistant.description,
             "instructions": assistant.instructions,
-            "tools": assistant.tools,  # This might need additional processing if tools is not a string
+            # Ensure 'tools' is assigned correctly. If tools is expected to be a list of dictionaries, this line is correct.
+            # If 'tools' should be the original objects or a different format, adjust accordingly.
+            "tools": tools_array,  
             "tool_resources": "",  # Assuming this information needs to be fetched or is not available
             "temperature": assistant.temperature,
             "top_p": assistant.top_p,
             "response_format": assistant.response_format
         })
+        
+        print(f"***Assistant Tools: {assistant.tools}")
 
-    tools_options = {
-        "None": [],
-        "code_interpreter": [{"type": "code_interpreter"}],
-        "file_search": [{"type": "file_search"}],
-        "function": [{"type": "function"}]
-    }
+        tools_options = {
+            "None": [],
+            "code_interpreter": [{"type": "code_interpreter"}],
+            "file_search": [{"type": "file_search"}],
+            "function": [{"type": "function"}]
+        }
 
 
     assistant_id = "N/A"  # Default value when in creation mode or no row is selected
@@ -55,22 +64,14 @@ def display_form(assistant=None):
     description = st.text_input("Description", value=default_values["description"])
     instructions = st.text_area("Instructions", value=default_values["instructions"])
     
-    # Check if default_values["tools"] is a list and convert to a valid key if necessary
-    if isinstance(default_values["tools"], list):
-        # Assuming the first item in the list is the desired default, or use a suitable default key
-        default_tool = default_values["tools"][0] if default_values["tools"] else "None"
-    else:
-        default_tool = default_values["tools"]
 
-    # Ensure default_tool is a valid key in tools_options
-    if default_tool not in tools_options:
-        default_tool = "None"  # Set to a valid default key
+    tools_array = default_values["tools"] if isinstance(default_values["tools"], list) else []
 
-    tools = st.selectbox(
-        "Tools",
-        list(tools_options.keys()),
-        index=list(tools_options.keys()).index(default_tool)  # Set default selection
-    )
+    file_search_selected = st.radio("File search", ('No', 'Yes'), index=1 if any(tool["type"] == "file_search" for tool in tools_array) else 0)
+    
+    code_interpreter_selected = st.radio("Code interpreter", ('No', 'Yes'), index=1 if any(tool["type"] == "code_interpreter" for tool in tools_array) else 0)
+
+
     tool_resources = st.text_input("Tool Resource", value=default_values["tool_resources"])
     temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=default_values["temperature"], step=0.01)
     top_p = st.slider("Top P", min_value=0.0, max_value=1.0, value=default_values["top_p"], step=0.01)
