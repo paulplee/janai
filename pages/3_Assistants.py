@@ -66,10 +66,11 @@ def display_form(assistant=None):
     
 
     tools_array = default_values["tools"] if isinstance(default_values["tools"], list) else []
-
-    file_search_selected = st.radio("File search", ('No', 'Yes'), index=1 if any(tool["type"] == "file_search" for tool in tools_array) else 0)
     
-    code_interpreter_selected = st.radio("Code interpreter", ('No', 'Yes'), index=1 if any(tool["type"] == "code_interpreter" for tool in tools_array) else 0)
+    # Replace the st.radio calls with st.checkbox for a more direct interaction
+    file_search_selected = st.toggle("File search", value=any(tool["type"] == "file_search" for tool in tools_array))
+
+    code_interpreter_selected = st.toggle("Code interpreter", value=any(tool["type"] == "code_interpreter" for tool in tools_array))
 
 
     tool_resources = st.text_input("Tool Resource", value=default_values["tool_resources"])
