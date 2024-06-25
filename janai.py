@@ -121,10 +121,11 @@ class JanAI:
         )
         return assistant
     
-    def update_assistant(self, assistant_id, name=None, description=None, instructions=None, tools=None, tool_resources=None, temperature=None, top_p=None, metadata=None, response_format=None):
+    def update_assistant(self, model, assistant_id, name=None, description=None, instructions=None, tools=None, tool_resources=None, temperature=None, top_p=None, metadata=None, response_format=None):
         assistant = client.beta.assistants.update(
             assistant_id, 
             name=name, 
+            model=model,
             description=description, 
             instructions=instructions, 
             temperature=temperature, 

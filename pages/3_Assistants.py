@@ -39,6 +39,9 @@ def display_form(assistant=None):
         "function": [{"type": "function"}]
     }
 
+
+    assistant_id = "N/A"  # Default value when in creation mode or no row is selected
+    
     # Ensure default_values["model"] is valid
     if default_values["model"] not in ["gpt-4o", "gpt-3.5-turbo"]:
         default_values["model"] = "gpt-4o"  # Set to a valid default value
@@ -73,21 +76,36 @@ def display_form(assistant=None):
     top_p = st.slider("Top P", min_value=0.0, max_value=1.0, value=default_values["top_p"], step=0.01)
     response_format = st.text_input("Response Format", value=default_values["response_format"])
 
-    # Add a submit button (optional, depending on your requirements)
-    if st.button("Create Assistant"):
-        st.session_state.janai.create_assistant(
-            model=model,
-            name=name,
-            description=description,
-            instructions=instructions,
-            tools=tools,
-            tool_resources=tool_resources,
-            temperature=temperature,
-            top_p=top_p,
-            response_format=response_format
-        )
-        st.session_state.creation_mode = False
-        refresh_assistants()
+    if st.session_state.creation_mode:
+        if st.button("Create Assistant"):
+            st.session_state.janai.create_assistant(
+                model=model,
+                name=name,
+                description=description,
+                instructions=instructions,
+                tools=tools,
+                tool_resources=tool_resources,
+                temperature=temperature,
+                top_p=top_p,
+                response_format=response_format
+            )
+            st.session_state.creation_mode = False
+            refresh_assistants()
+    else:
+        if st.button("Update Assistant"):
+            st.session_state.janai.update_assistant(
+                assistant_id=assistant.id,
+                model=model,
+                name=name,
+                description=description,
+                instructions=instructions,
+                tools=tools,
+                tool_resources=tool_resources,
+                temperature=temperature,
+                top_p=top_p,
+                response_format=response_format
+            )
+            refresh_assistants()
         
 def display_assistants():
     assistants_data = [{
@@ -156,18 +174,25 @@ def main():
                 else:
                     st.write("No rows selected for deletion.")
 
-    with col2:
-        if 'creation_mode' in st.session_state and st.session_state.creation_mode:
-            display_form()
-        else:
-            if 'selected_rows' in st.session_state.grid_response and st.session_state.grid_response['selected_rows'] is not None:
-                selected_rows = st.session_state.grid_response['selected_rows']
-                if not selected_rows.empty:
-                    selected_row = selected_rows.iloc[0]
-                    assistant_id = selected_row['id']
-                    matching_assistant = next((assistant for assistant in st.session_state.assistants if assistant.id == assistant_id), None)
-                    if matching_assistant:
-                        display_form(matching_assistant)
+        with col2:
+            # Display the assistant ID or 'N/A' based on the selection or creation mode
+            if 'creation_mode' in st.session_state and st.session_state.creation_mode:
+                st.write("Assistant ID: N/A")
+                display_form()
+            else:
+                if 'selected_rows' in st.session_state.grid_response and st.session_state.grid_response['selected_rows'] is not None:
+                    selected_rows = st.session_state.grid_response['selected_rows']
+                    if not selected_rows.empty:
+                        selected_row = selected_rows.iloc[0]
+                        assistant_id = selected_row['id']
+                        st.write(f"Assistant ID: {assistant_id}")  # Display the selected assistant's ID
+                        matching_assistant = next((assistant for assistant in st.session_state.assistants if assistant.id == assistant_id), None)
+                        if matching_assistant:
+                            display_form(matching_assistant)
+                    else:
+                        st.write("Assistant ID: N/A")  # Display 'N/A' if no row is selected
+                else:
+                    st.write("Assistant ID: N/A")  # Display 'N/A' if no row is selected
 
 if __name__ == '__main__':
     main()
