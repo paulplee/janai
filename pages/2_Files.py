@@ -2,6 +2,15 @@ import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
 import pandas as pd
 from janai import JanAI
+import hashlib
+
+def file_hash(file):
+    # Calculate the hash of a file's contents
+    file.seek(0)  # Ensure we're at the start of the file
+    hash_obj = hashlib.sha256()
+    hash_obj.update(file.read())  # Read the file contents and update the hash
+    file.seek(0)  # Reset file pointer for further use
+    return hash_obj.hexdigest()
 
 def display_files():
     df = pd.DataFrame([file.to_dict() for file in st.session_state.files])
@@ -26,26 +35,25 @@ def refresh_files():
     
 
 def main():
+    st.set_page_config(layout="wide")
     if 'janai' not in st.session_state:
         st.session_state.janai = JanAI()
     if 'files' not in st.session_state:
         st.session_state.files = st.session_state.janai.list_files()
     if 'update_grid' not in st.session_state:
-        st.session_state.update_grid = True  # Initialize the trigger for updating the grid
-   # Example of making grid display dependent on update_grid
-    if st.session_state.update_grid:
-        # This is a dummy operation to make the grid's rendering logic dependent on update_grid
-        pass
-    
+        st.session_state.update_grid = True
+    if 'file_processed' not in st.session_state:
+        st.session_state.file_processed = False
+    if 'last_file_hash' not in st.session_state:
+        st.session_state.last_file_hash = ''  # Initialize the last file hash
+
     st.write("# JanAI")
     st.write("## List of Files")
-    # Store grid response in session state
     st.session_state.grid_response = display_files()
     num_files = len(st.session_state.files)
     st.write(f"Number of files: {num_files}")
 
     if st.button('Delete Selected'):
-        # Access grid_response from session state
         selected_rows = st.session_state.grid_response['selected_rows']
         if not selected_rows.empty:
             deleted_ids = [row['id'] for index, row in selected_rows.iterrows() if 'id' in row]
@@ -56,9 +64,23 @@ def main():
         else:
             st.write("No rows selected for deletion.")
 
+    st.write("---")
+    st.write("## Upload File")
+     # Upload file section
+    uploaded_file = st.file_uploader("## Upload File", type=None, key="file_uploader")
+
+    if uploaded_file is not None:
+        current_file_hash = file_hash(uploaded_file)
+        if current_file_hash != st.session_state.last_file_hash:
+            # It's a new file, reset the file_processed flag
+            st.session_state.file_processed = False
+
+        if not st.session_state.file_processed:
+            st.session_state.janai.create_file(file=uploaded_file)
+            st.success("File uploaded successfully.")
+            refresh_files()
+            st.session_state.file_processed = True  # Set the flag to True after processing
+            st.session_state.last_file_hash = current_file_hash  # Update the last file hash
 
 if __name__ == '__main__':
     main()
-    
-    
-    

@@ -80,16 +80,15 @@ def display_form(assistant=None):
     top_p = st.slider("Top P", min_value=0.0, max_value=1.0, value=default_values["top_p"], step=0.01)
     response_format = st.text_input("Response Format", value=default_values["response_format"])
 
-    def generate_tools_string():
+    def generate_tools_array():
+        tools_array = []
         if file_search_selected and code_interpreter_selected:
-            tools_str = '[{"type": "code_interpreter"}, {"type": "file_search"}]'
+            tools_array = [{"type": "code_interpreter"}, {"type": "file_search"}]
         elif file_search_selected:
-            tools_str = '[{"type": "file_search"}]'
+            tools_array = [{"type": "file_search"}]
         elif code_interpreter_selected:
-            tools_str = '[{"type": "code_interpreter"}]'
-        else:
-            tools_str = '[]'
-        return tools_str
+            tools_array = [{"type": "code_interpreter"}]
+        return tools_array
 
 
     if st.session_state.creation_mode:
@@ -99,7 +98,7 @@ def display_form(assistant=None):
                 name=name,
                 description=description,
                 instructions=instructions,
-                tools=generate_tools_string(),
+                tools=generate_tools_array(),
                 tool_resources=tool_resources,
                 temperature=temperature,
                 top_p=top_p,
@@ -116,7 +115,7 @@ def display_form(assistant=None):
                 name=name,
                 description=description,
                 instructions=instructions,
-                tools=generate_tools_string(),
+                tools=generate_tools_array(),
                 tool_resources=tool_resources,
                 temperature=temperature,
                 top_p=top_p,
@@ -156,6 +155,8 @@ def refresh_assistants():
     st.rerun()
 
 def main():
+    st.set_page_config(layout="wide")
+
     if 'janai' not in st.session_state:
         st.session_state.janai = JanAI()
     if 'assistants' not in st.session_state:

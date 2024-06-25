@@ -8,7 +8,7 @@
             "name": "JanAI",
             "type": "debugpy",
             "request": "launch",
-            "program": "/home/paulplee/code/janai/.venv_janai/lib/python3.11/site-packages/streamlit",
+            "program": "/Users/paulplee/code/janai/.venv_janai/lib/python3.12/site-packages/streamlit",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [

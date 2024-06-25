@@ -36,15 +36,15 @@ class JanAI:
             file_list.append(f)
         return file_list
 
-    def create_file(name, purpose=None):
-        file = client.files.create(name=name, purpose=purpose)
+    def create_file(self, file, purpose="assistants"):
+        returnedFile = client.files.create(file=file, purpose=purpose)
         f = File(
-            id=file.id,
-            object_type=file.object,
-            bytes=file.bytes,
-            created_at=file.created_at,
-            filename=file.filename,
-            purpose=file.purpose
+            id=returnedFile.id,
+            object_type=returnedFile.object,
+            bytes=returnedFile.bytes,
+            created_at=returnedFile.created_at,
+            filename=returnedFile.filename,
+            purpose=returnedFile.purpose
         )
         return f
 
