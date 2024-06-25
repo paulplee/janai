@@ -121,5 +121,16 @@ class JanAI:
         )
         return assistant
     
+    def update_assistant(self, assistant_id, name=None, description=None, instructions=None, tools=None, tool_resources=None, temperature=None, top_p=None, metadata=None, response_format=None):
+        assistant = client.beta.assistants.update(
+            assistant_id, 
+            name=name, 
+            description=description, 
+            instructions=instructions, 
+            temperature=temperature, 
+            top_p=top_p, 
+        )
+        return assistant
+    
     def delete_assistant(self, assistant_id):
         client.beta.assistants.delete(assistant_id)

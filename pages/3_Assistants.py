@@ -4,12 +4,34 @@ import pandas as pd
 from janai import JanAI
 from datetime import datetime, timezone
 
-def display_form():
-    # Display the form for creating a new assistant
-    model = st.selectbox("Model", ["gpt-4o", "gpt-3.5-turbo"])
-    name = st.text_input("Name", value="", placeholder="Optional")
-    description = st.text_input("Description", value="", placeholder="Optional")
-    instructions = st.text_area("Instructions", value="", placeholder="Optional")
+def display_form(assistant=None):
+    # Initialize default values
+    default_values = {
+        "model": "",
+        "name": "",
+        "description": "",
+        "instructions": "",
+        "tools": "None",  # Assuming 'None' is a valid default option
+        "tool_resources": "",
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "response_format": ""
+    }
+
+    # If an assistant is provided, use its properties for default values
+    if assistant:
+        default_values.update({
+            "model": assistant.model,
+            "name": assistant.name,
+            "description": assistant.description,
+            "instructions": assistant.instructions,
+            "tools": assistant.tools,  # This might need additional processing if tools is not a string
+            "tool_resources": "",  # Assuming this information needs to be fetched or is not available
+            "temperature": assistant.temperature,
+            "top_p": assistant.top_p,
+            "response_format": assistant.response_format
+        })
+
     tools_options = {
         "None": [],
         "code_interpreter": [{"type": "code_interpreter"}],
@@ -17,15 +39,39 @@ def display_form():
         "function": [{"type": "function"}]
     }
 
+    # Ensure default_values["model"] is valid
+    if default_values["model"] not in ["gpt-4o", "gpt-3.5-turbo"]:
+        default_values["model"] = "gpt-4o"  # Set to a valid default value
+
+    model = st.selectbox(
+        "Model", 
+        ["gpt-4o", "gpt-3.5-turbo"], 
+        index=["gpt-4o", "gpt-3.5-turbo"].index(default_values["model"])
+    )
+    name = st.text_input("Name", value=default_values["name"])
+    description = st.text_input("Description", value=default_values["description"])
+    instructions = st.text_area("Instructions", value=default_values["instructions"])
+    
+    # Check if default_values["tools"] is a list and convert to a valid key if necessary
+    if isinstance(default_values["tools"], list):
+        # Assuming the first item in the list is the desired default, or use a suitable default key
+        default_tool = default_values["tools"][0] if default_values["tools"] else "None"
+    else:
+        default_tool = default_values["tools"]
+
+    # Ensure default_tool is a valid key in tools_options
+    if default_tool not in tools_options:
+        default_tool = "None"  # Set to a valid default key
+
     tools = st.selectbox(
         "Tools",
-        options=list(tools_options.values()),  # Pass the values as options
-        format_func=lambda x: [k for k, v in tools_options.items() if v == x][0]  # Use the keys as labels
+        list(tools_options.keys()),
+        index=list(tools_options.keys()).index(default_tool)  # Set default selection
     )
-    tool_resources = st.text_input("Tool Resource", value="", placeholder="Optional")
-    temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=1.0, step=0.01)
-    top_p = st.slider("Top P", min_value=0.0, max_value=1.0, value=1.0, step=0.01)
-    response_format = st.text_input("Response Format", value="", placeholder="Optional")
+    tool_resources = st.text_input("Tool Resource", value=default_values["tool_resources"])
+    temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=default_values["temperature"], step=0.01)
+    top_p = st.slider("Top P", min_value=0.0, max_value=1.0, value=default_values["top_p"], step=0.01)
+    response_format = st.text_input("Response Format", value=default_values["response_format"])
 
     # Add a submit button (optional, depending on your requirements)
     if st.button("Create Assistant"):
@@ -113,30 +159,15 @@ def main():
     with col2:
         if 'creation_mode' in st.session_state and st.session_state.creation_mode:
             display_form()
-            
         else:
             if 'selected_rows' in st.session_state.grid_response and st.session_state.grid_response['selected_rows'] is not None:
                 selected_rows = st.session_state.grid_response['selected_rows']
                 if not selected_rows.empty:
                     selected_row = selected_rows.iloc[0]
                     assistant_id = selected_row['id']
-                    
                     matching_assistant = next((assistant for assistant in st.session_state.assistants if assistant.id == assistant_id), None)
-                    
                     if matching_assistant:
-                        st.write("## Assistant Details")
-                        st.write(f"ID: {matching_assistant.id}")
-                        st.write(f"Object: {matching_assistant.object}")
-                        st.write(f"Created At: {matching_assistant.created_at}")
-                        st.write(f"Name: {matching_assistant.name}")
-                        st.write(f"Description: {matching_assistant.description}")
-                        st.write(f"Model: {matching_assistant.model}")
-                        st.write(f"Instructions: {matching_assistant.instructions}")
-                        st.write(f"Tools: {matching_assistant.tools}")
-                        st.write(f"Metadata: {matching_assistant.metadata}")
-                        st.write(f"Top P: {matching_assistant.top_p}")
-                        st.write(f"Temperature: {matching_assistant.temperature}")
-                        st.write(f"Response Format: {matching_assistant.response_format}")
+                        display_form(matching_assistant)
 
 if __name__ == '__main__':
     main()
