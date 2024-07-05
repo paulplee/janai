@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 from entities import File, VectorStore
 
+load_dotenv()
 client = OpenAI()
 model = "gpt-4o"
 
@@ -108,6 +109,8 @@ class JanAI:
         assistant_list = []
         for assistant in assistants.data:
             assistant_list.append(assistant)
+            if assistant.tool_resources.file_search != None:
+                print(assistant.tool_resources.file_search.vector_store_ids)
         return assistant_list
     
     def create_assistant(self, model, name=None, description=None, instructions=None, tools=None, tool_resources=None, temperature=1.0, top_p=1.0, metadata=None, response_format=None):
