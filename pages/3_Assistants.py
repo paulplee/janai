@@ -13,10 +13,11 @@ def display_form(assistant=None):
         "name": "",
         "description": "",
         "instructions": "",
-        "tools": "None",  # Assuming 'None' is a valid default option
+        "tools": "",
+        "tools_array": "None",  # Assuming 'None' is a valid default option
         "tool_resources": "",
         "temperature": 1.0,
-        "top_p": 1.0,
+        "top_p": 2.0,
         "response_format": ""
     }
     
@@ -34,14 +35,14 @@ def display_form(assistant=None):
             "instructions": assistant.instructions,
             # Ensure 'tools' is assigned correctly. If tools is expected to be a list of dictionaries, this line is correct.
             # If 'tools' should be the original objects or a different format, adjust accordingly.
-            "tools": tools_array,  
-            "tool_resources": "",  # Assuming this information needs to be fetched or is not available
+            "tools": assistant.tools,
+            "tools_array": tools_array, 
+            "tool_resources": assistant.tools,  # Assuming this information needs to be fetched or is not available
             "temperature": assistant.temperature,
             "top_p": assistant.top_p,
             "response_format": assistant.response_format
         })
         
-        print(f"***Assistant Tools: {assistant.tools}")
 
         tools_options = {
             "None": [],
@@ -67,16 +68,23 @@ def display_form(assistant=None):
     instructions = st.text_area("Instructions", value=default_values["instructions"])
     
 
-    tools_array = default_values["tools"] if isinstance(default_values["tools"], list) else []
+    tools_array = default_values["tools_array"] if isinstance(default_values["tools_array"], list) else []
     
     # Replace the st.radio calls with st.checkbox for a more direct interaction
     file_search_selected = st.toggle("File search", value=any(tool["type"] == "file_search" for tool in tools_array))
+    if file_search_selected:
+        try:
+            st.write(f"VS: {assistant.tool_resources.file_search.vector_store_ids}")
+        except:
+            pass
 
     code_interpreter_selected = st.toggle("Code interpreter", value=any(tool["type"] == "code_interpreter" for tool in tools_array))
+    
+    functions_selected = st.toggle("Function", value=any(tool["type"] == "function" for tool in tools_array))
 
 
-    tool_resources = st.text_input("Tool Resource", value=default_values["tool_resources"])
-    temperature = st.slider("Temperature", min_value=0.0, max_value=1.0, value=default_values["temperature"], step=0.01)
+    tool_resources = st.text_input("Tool Resources", value=default_values["tool_resources"])
+    temperature = st.slider("Temperature", min_value=0.0, max_value=2.0, value=default_values["temperature"], step=0.01)
     top_p = st.slider("Top P", min_value=0.0, max_value=1.0, value=default_values["top_p"], step=0.01)
     response_format = st.text_input("Response Format", value=default_values["response_format"])
 
