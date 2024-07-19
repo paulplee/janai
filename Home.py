@@ -3,6 +3,7 @@ import warnings
 import os
 from dotenv import load_dotenv
 from janai import JanAI
+from utils import OpenAIUtils as utils
 
 # Assuming janai is already imported or defined somewhere in your code
 import janai
@@ -16,8 +17,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 st.set_page_config(layout="wide")
 
 def main(): 
-    if 'janai' not in st.session_state:
-        st.session_state.janai = JanAI()
+    utils.init_session_state()
 
     st.write("# JanAI")
 
@@ -44,6 +44,22 @@ def main():
         st.session_state.assistants = st.session_state.janai.list_assistants()
         st.session_state.update_grid = True
         
+        
+    assistant_grid, vector_store_grid, file_grid = st.columns(3)
+    
+    with assistant_grid:
+        st.write("### Assistants")
+        
+    with vector_store_grid:
+        st.write("### Vector Stores")
+    
+    with file_grid:
+        st.write("### Files")
+        st.session_state.grid_response = utils.display_files()
+        num_files = len(st.session_state.files)
+        st.write(f"Number of files: {num_files}")
+
+    
 if __name__ == '__main__':
     main()
     

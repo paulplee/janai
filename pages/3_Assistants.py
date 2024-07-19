@@ -3,8 +3,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 import pandas as pd
 from janai import JanAI
 from datetime import datetime, timezone
-
-
+from utils import OpenAIUtils as utils
 
 def display_form(assistant=None):
     # Initialize default values
@@ -165,12 +164,8 @@ def refresh_assistants():
 def main():
     st.set_page_config(layout="wide")
 
-    if 'janai' not in st.session_state:
-        st.session_state.janai = JanAI()
-    if 'assistants' not in st.session_state:
-        st.session_state.assistants = st.session_state.janai.list_assistants(order='asc', limit=100)
-    if 'update_grid' not in st.session_state:
-        st.session_state.update_grid = True
+    utils.init_session_state()
+
     if 'grid_key' not in st.session_state:  # Initialize grid_key in session state
         st.session_state.grid_key = "grid"
 

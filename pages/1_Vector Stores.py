@@ -105,13 +105,8 @@ def main():
     Note:
         This module assumes the existence of a `JanAI` class for managing vector stores and a `utils` module with specific functions like `convert` and `bytes_to_readable`. It also relies on a `constants.py` file for grid configuration constants.
     """
-    if 'janai' not in st.session_state:
-        st.session_state.janai = JanAI()
-    if 'vector_stores' not in st.session_state:
-        st.session_state.vector_stores = st.session_state.janai.list_vector_stores()
-    if 'update_grid' not in st.session_state:
-        st.session_state.update_grid = True  # Initialize the trigger for updating the grid
-   # Example of making grid display dependent on update_grid
+    utils.init_session_state()
+    
     if st.session_state.update_grid:
         # This is a dummy operation to make the grid's rendering logic dependent on update_grid
         pass

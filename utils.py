@@ -1,4 +1,29 @@
+import hashlib
+import streamlit as st
+from st_aggrid import AgGrid, GridOptionsBuilder
+import pandas as pd
+import constants as c
+from janai import JanAI  # Assuming JanAI is defined and accessible
+
 class OpenAIUtils:
+    @staticmethod
+    def init_session_state():
+        # Initialize session state variables if they don't exist
+        if 'janai' not in st.session_state:
+            st.session_state.janai = JanAI()
+        if 'assistants' not in st.session_state:
+            st.session_state.assistants = st.session_state.janai.list_assistants(order='asc', limit=100)
+        if 'vector_stores' not in st.session_state:
+            st.session_state.vector_stores = st.session_state.janai.list_vector_stores()
+        if 'files' not in st.session_state:
+            st.session_state.files = st.session_state.janai.list_files()
+        if 'update_grid' not in st.session_state:
+            st.session_state.update_grid = True
+        if 'file_processed' not in st.session_state:
+            st.session_state.file_processed = False
+        if 'last_file_hash' not in st.session_state:
+            st.session_state.last_file_hash = ''
+            
     @staticmethod
     def convert(obj):
         """
@@ -75,3 +100,96 @@ class OpenAIUtils:
         # If the size exceeds petabytes, it's still formatted in petabytes.
         # This is the upper limit of this method's conversion logic.
         return f"{bytes:.2f} PB"
+    
+    def file_hash(file):
+        """
+        Calculates the SHA-256 hash of a file's contents.
+
+        This function reads the entire content of a file, calculates its SHA-256 hash, and then returns the hexadecimal
+        representation of this hash. It ensures the file's read pointer is reset to its original position after reading.
+
+        Parameters:
+        - file (file-like object): The file for which to calculate the hash. This should be an open file object.
+
+        Returns:
+        - str: The hexadecimal string representation of the SHA-256 hash of the file's contents.
+        """
+        file.seek(0)
+        hash_obj = hashlib.sha256()
+        hash_obj.update(file.read())
+        file.seek(0)
+        return hash_obj.hexdigest()
+
+    def display_files():
+        """
+        Displays a list of files in a Streamlit app using the AgGrid component.
+
+        This function converts a list of file metadata into a pandas DataFrame, then formats certain columns for better readability
+        (e.g., converting byte sizes to a human-readable format and formatting timestamps). It uses the AgGrid component to display
+        the DataFrame in a grid format, allowing for interactive sorting and selection. The grid's columns are configured for
+        display properties and order.
+
+        Returns:
+        - Grid response object from AgGrid, containing information about the grid state, including selected rows.
+        """
+        files_converted = [OpenAIUtils.convert(file) for file in st.session_state.files]
+        for file in files_converted:
+            # Convert 'created_at' to datetime and then format it
+            if 'created_at' in file:
+                # Ensure the datetime is timezone-aware in UTC
+                utc_datetime = pd.to_datetime(file['created_at'], unit='s', utc=True)
+                file['created_at'] = utc_datetime.strftime('%d/%m/%Y %H:%M') + " UTC"        # Convert 'bytes' to a human-readable format
+            if 'bytes' in file:
+                file['bytes'] = OpenAIUtils.bytes_to_readable(file['bytes'])
+        
+        df = pd.DataFrame(files_converted)
+        
+        gb = GridOptionsBuilder.from_dataframe(df)
+        # Hide all columns initially
+        gb.configure_columns(df.columns, hide=True)
+        # Specify the order and visibility of columns
+        column_order = ['id', 'filename', 'bytes', 'created_at']
+        for column in column_order:
+            match column:
+                case "id":
+                    # Configure 'id' column
+                    gb.configure_column("id", hide=False, width=c.COL_WIDTHS['id'])
+                case "filename":
+                    # Configure 'filename' column
+                    gb.configure_column("name", hide=False, width=c.COL_WIDTHS['name'])
+                case "bytes":
+                    # Configure 'bytes' column with specific width
+                    gb.configure_column("bytes", hide=False, width=c.COL_WIDTHS['bytes'])
+                case "created_at":
+                    # Configure 'created_at' column
+                    gb.configure_column("created_at", hide=False, width=c.COL_WIDTHS['datetime'])
+                case _:
+                    # Default configuration for any other column
+                    gb.configure_column(column, hide=False)
+                    
+        grid_options = gb.build()
+        # Correctly reorder the columnDefs based on column_order
+        # First, create a mapping of field names to column definitions
+        field_to_colDef = {colDef['field']: colDef for colDef in grid_options['columnDefs']}
+        # Then, reorder columnDefs using the column_order list
+        grid_options['columnDefs'] = [field_to_colDef[column] for column in column_order if column in field_to_colDef]
+
+        grid_options['rowSelection'] = 'multiple'
+        base_height_per_row = 30
+        header_height = 60
+        dynamic_height = min(max(len(df) * base_height_per_row + header_height, 100), 600)
+        # grid_response = AgGrid(df, gridOptions=grid_options, height=dynamic_height, width='100%', update_mode='MODEL_CHANGED', fit_columns_on_grid_load=True)
+        grid_response = AgGrid(df, gridOptions=grid_options, height=dynamic_height, width='100%', update_mode='MODEL_CHANGED', fit_columns_on_grid_load=True)
+        return grid_response
+
+
+    def refresh_files():
+        """
+        Refreshes the list of files displayed in the Streamlit app.
+
+        This function updates the global session state with a new list of files by calling a method to list files from an external
+        source (e.g., a database or file storage system). It then triggers a rerun of the Streamlit app to reflect the updated file list.
+        """
+        st.session_state.files = st.session_state.janai.list_files()
+        st.session_state.update_grid = not st.session_state.update_grid
+        st.rerun()
