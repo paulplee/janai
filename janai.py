@@ -1,9 +1,12 @@
 from openai import OpenAI
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
-client = OpenAI()
-model = "gpt-4o"
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
+model = "gpt-4o-mini"
+project = None
 
 class JanAI:
     """
@@ -14,6 +17,7 @@ class JanAI:
     Attributes:
         model (str): The model name to be used for the assistant operations.
     """
+    client = OpenAI()
     
     def __init__(self, model: str = model):
         """
@@ -23,6 +27,17 @@ class JanAI:
             model (str): The model name to be used for the assistant operations. Defaults to "gpt-4o".
         """
         self.model = model
+        
+    def set_project(self, project):
+        """
+        Sets the project to be used for OpenAI API operations.
+        
+        Args:
+            project: The project ID or name to be used for the OpenAI API operations.
+        """
+        self.project = project
+        self.client = OpenAI(project=project)
+        
 
     def list_files(self):
         """
@@ -31,7 +46,7 @@ class JanAI:
         Returns:
             list: A list of files available in the OpenAI account.
         """
-        files_response = client.files.list()  
+        files_response = self.client.files.list()  
         file_list = []
         for file in files_response.data:
             file_list.append(file)
@@ -48,7 +63,7 @@ class JanAI:
         Returns:
             The response from the file creation API call.
         """
-        returnedFile = client.files.create(file=file, purpose=purpose)
+        returnedFile = self.client.files.create(file=file, purpose=purpose)
         return returnedFile
 
     def retrieve_file(self, file_id):
@@ -61,7 +76,7 @@ class JanAI:
         Returns:
             The file object as returned by the OpenAI API.
         """
-        file = client.files.retrieve(file_id)
+        file = self.client.files.retrieve(file_id)
         return file
 
     def delete_file(self, file_id):
@@ -71,7 +86,7 @@ class JanAI:
         Args:
             file_id: The unique identifier of the file to delete.
         """
-        client.files.delete(file_id)
+        self.client.files.delete(file_id)
         
     def list_vector_stores(self):
         """
@@ -80,7 +95,7 @@ class JanAI:
         Returns:
             list: A list of vector stores available in the OpenAI account.
         """
-        vector_stores = client.beta.vector_stores.list()
+        vector_stores = self.client.beta.vector_stores.list()
         vs_list = []
         for vector_store in vector_stores.data:
             vs_list.append(vector_store)
@@ -97,7 +112,7 @@ class JanAI:
         Returns:
             The response from the vector store creation API call.
         """
-        vector_store = client.beta.vector_stores.create(name=name, metadata=metadata)
+        vector_store = self.client.beta.vector_stores.create(name=name, metadata=metadata)
         return vector_store
 
     def delete_vector_store(self, vector_store_id):
@@ -107,7 +122,7 @@ class JanAI:
         Args:
             vector_store_id: The unique identifier of the vector store to delete.
         """
-        client.beta.vector_stores.delete(vector_store_id)
+        self.client.beta.vector_stores.delete(vector_store_id)
     
     def list_assistants(self, limit=None, order=None, after=None, before=None):
         """
@@ -122,7 +137,7 @@ class JanAI:
         Returns:
             list: A list of assistants available in the OpenAI account.
         """
-        assistants = client.beta.assistants.list(limit=limit, order=order, after=after, before=before)
+        assistants = self.client.beta.assistants.list(limit=limit, order=order, after=after, before=before)
         assistant_list = []
         for assistant in assistants.data:
             assistant_list.append(assistant)
@@ -147,7 +162,7 @@ class JanAI:
         Returns:
             The response from the assistant creation API call.
         """
-        assistant = client.beta.assistants.create(
+        assistant = self.client.beta.assistants.create(
             name=name, 
             model=model, 
             description=description, 
@@ -177,7 +192,7 @@ class JanAI:
         Returns:
             The response from the assistant update API call.
         """
-        assistant = client.beta.assistants.update(
+        assistant = self.client.beta.assistants.update(
             assistant_id, 
             name=name, 
             model=model,
@@ -196,4 +211,4 @@ class JanAI:
         Args:
             assistant_id: The unique identifier of the assistant to delete.
         """
-        client.beta.assistants.delete(assistant_id)
+        self.client.beta.assistants.delete(assistant_id)
