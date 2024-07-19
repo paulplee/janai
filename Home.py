@@ -3,7 +3,7 @@ import warnings
 import os
 from dotenv import load_dotenv
 from janai import JanAI
-from utils import OpenAIUtils as utils
+from utils import JanAIUtils as utils
 
 # Assuming janai is already imported or defined somewhere in your code
 import janai
@@ -52,6 +52,37 @@ def main():
         
     with vector_store_grid:
         st.write("### Vector Stores")
+
+        st.session_state.grid_response = utils.display_vector_stores()
+
+
+        col1, col2, _ = st.columns(3)
+        
+        with col1:
+            if st.button('Delete'):
+                # Access grid_response from session state
+                selected_rows = st.session_state.grid_response['selected_rows']
+                if not selected_rows.empty:
+                    deleted_ids = [row['id'] for index, row in selected_rows.iterrows() if 'id' in row]
+                    for row_id in deleted_ids:
+                        st.session_state.janai.delete_vector_store(row_id)
+                    st.write("Deleted Vector Store IDs:", deleted_ids)
+                    utils.refresh_vector_stores()
+                else:
+                    st.write("No rows selected for deletion.")
+        with col2:
+            if st.button('Reload'):
+                st.session_state.files = st.session_state.janai.list_vector_stores()
+                st.session_state.update_grid = True
+
+        st.write("---")
+        st.write("## Create Vector Store")
+        st.text_input("Enter a name for the new vector store:", key="user_input")
+        if st.button("Create Vector Store"):
+            utils.create_vector_store_action()
+            utils.refresh_vector_stores()
+
+
     
     with file_grid:
         st.write("### Files")

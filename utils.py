@@ -5,7 +5,7 @@ import pandas as pd
 import constants as c
 from janai import JanAI  # Assuming JanAI is defined and accessible
 
-class OpenAIUtils:
+class JanAIUtils:
     @staticmethod
     def init_session_state():
         # Initialize session state variables if they don't exist
@@ -61,7 +61,7 @@ class OpenAIUtils:
                 elif hasattr(value, "__dict__"):
                     # For nested objects without a `to_dict` method, recursively call this convert method.
                     # This ensures that deeply nested objects can still be converted to a dictionary.
-                    result[key] = OpenAIUtils.convert(value)
+                    result[key] = JanAIUtils.convert(value)
                 else:
                     # For attributes that are neither objects with a `to_dict` method nor objects that can be
                     # directly converted, assign their value directly in the result dictionary.
@@ -132,7 +132,7 @@ class OpenAIUtils:
         Returns:
         - Grid response object from AgGrid, containing information about the grid state, including selected rows.
         """
-        files_converted = [OpenAIUtils.convert(file) for file in st.session_state.files]
+        files_converted = [JanAIUtils.convert(file) for file in st.session_state.files]
         for file in files_converted:
             # Convert 'created_at' to datetime and then format it
             if 'created_at' in file:
@@ -140,7 +140,7 @@ class OpenAIUtils:
                 utc_datetime = pd.to_datetime(file['created_at'], unit='s', utc=True)
                 file['created_at'] = utc_datetime.strftime('%d/%m/%Y %H:%M') + " UTC"        # Convert 'bytes' to a human-readable format
             if 'bytes' in file:
-                file['bytes'] = OpenAIUtils.bytes_to_readable(file['bytes'])
+                file['bytes'] = JanAIUtils.bytes_to_readable(file['bytes'])
         
         df = pd.DataFrame(files_converted)
         
@@ -193,3 +193,72 @@ class OpenAIUtils:
         st.session_state.files = st.session_state.janai.list_files()
         st.session_state.update_grid = not st.session_state.update_grid
         st.rerun()
+
+
+    def display_vector_stores():
+        vs_converted = [JanAIUtils.convert(vector_store) for vector_store in st.session_state.vector_stores]
+        for vector_store in vs_converted:
+            for key in ['created_at', 'last_active_at']:
+                if key in vector_store:
+                    # Ensure the datetime is timezone-aware in UTC
+                    utc_datetime = pd.to_datetime(vector_store[key], unit='s', utc=True)
+                    vector_store[key] = utc_datetime.strftime('%d/%m/%Y %H:%M') + " UTC"
+                if 'bytes' in vector_store:
+                    vector_store['bytes'] = JanAIUtils.bytes_to_readable(vector_store['bytes'])
+        
+        df = pd.DataFrame([JanAIUtils.convert(vector_store) for vector_store in st.session_state.vector_stores])
+        gb = GridOptionsBuilder.from_dataframe(df)
+        
+        gb.configure_columns(df.columns, hide=True)
+        column_order = ['id', 'name', 'usage_bytes', 'created_at', 'last_active_at']
+        for column in column_order:
+            match column:
+                case "id":
+                    # Configure 'id' column
+                    gb.configure_column("id", hide=False, width=c.COL_WIDTHS['id'])
+                case "name":
+                    # Configure 'filename' column
+                    gb.configure_column("name", hide=False, width=c.COL_WIDTHS['name'])
+                case "usage_bytes":
+                    # Configure 'bytes' column with specific width
+                    gb.configure_column("usage_bytes", hide=False, width=c.COL_WIDTHS['bytes'])
+                case "created_at":
+                    # Configure 'created_at' column
+                    gb.configure_column("created_at", hide=False, width=c.COL_WIDTHS['datetime'])
+                case "last_active_at":
+                    # Configure 'created_at' column
+                    gb.configure_column("last_active_at", hide=False, width=c.COL_WIDTHS['datetime'])
+                case _:
+                    # Default configuration for any other column
+                    gb.configure_column(column, hide=False)
+        
+        grid_options = gb.build()
+        # Correctly reorder the columnDefs based on column_order
+        # First, create a mapping of field names to column definitions
+        field_to_colDef = {colDef['field']: colDef for colDef in grid_options['columnDefs']}
+        # Then, reorder columnDefs using the column_order list
+        grid_options['columnDefs'] = [field_to_colDef[column] for column in column_order if column in field_to_colDef]
+
+        grid_options['rowSelection'] = 'multiple'
+
+        # Calculate dynamic height
+        base_height_per_row = 30  # Example height per row in pixels
+        header_height = 60  # Approximate height for headers and padding
+        dynamic_height = min(max(len(df) * base_height_per_row + header_height, 100), 600)  # Set min and max height
+
+        grid_response = AgGrid(df, gridOptions=grid_options, height=dynamic_height, width='100%', update_mode='MODEL_CHANGED', fit_columns_on_grid_load=True)
+        return grid_response
+
+    def refresh_vector_stores():
+        st.session_state.vector_stores = st.session_state.janai.list_vector_stores()
+        # Explicitly trigger a rerender of the grid by toggling the update_grid state
+        st.session_state.update_grid = not st.session_state.update_grid
+        # Force Streamlit to rerender the page, which includes the grid
+        st.rerun()
+        
+    def create_vector_store_action():
+        user_input = st.session_state.user_input
+        if user_input:
+            st.session_state.janai.create_vector_store(name=user_input)
+            st.success(f"Vector store '{user_input}' created successfully!")
+            JanAIUtils.refresh_vector_stores() 

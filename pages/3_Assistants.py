@@ -3,7 +3,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 import pandas as pd
 from janai import JanAI
 from datetime import datetime, timezone
-from utils import OpenAIUtils as utils
+from utils import JanAIUtils as utils
 
 def display_form(assistant=None):
     # Initialize default values

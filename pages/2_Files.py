@@ -2,7 +2,7 @@ import streamlit as st
 from st_aggrid import AgGrid
 import pandas as pd
 from janai import JanAI
-from utils import OpenAIUtils as utils
+from utils import JanAIUtils as utils
 import constants as c
 
 
