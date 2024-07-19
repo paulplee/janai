@@ -2,9 +2,11 @@ import streamlit as st
 from st_aggrid import AgGrid, GridOptionsBuilder
 import pandas as pd
 from janai import JanAI
+from utils import OpenAIUtils as utils
+
 
 def display_vector_stores():
-    df = pd.DataFrame([vector_store.to_dict() for vector_store in st.session_state.vector_stores])
+    df = pd.DataFrame([utils.convert(vector_store) for vector_store in st.session_state.vector_stores])
     gb = GridOptionsBuilder.from_dataframe(df)
     grid_options = gb.build()
     grid_options['rowSelection'] = 'multiple'
