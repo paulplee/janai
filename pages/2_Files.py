@@ -4,6 +4,7 @@ import pandas as pd
 from janai import JanAI
 import hashlib
 from utils import OpenAIUtils as utils
+import constants as c
 
 def file_hash(file):
     """
@@ -57,16 +58,16 @@ def display_files():
         match column:
             case "id":
                 # Configure 'id' column
-                gb.configure_column("id", hide=False, width=70)
-            # case "filename":
-            #     # Configure 'filename' column
-            #     gb.configure_column("filename", hide=False)
+                gb.configure_column("id", hide=False, width=c.COL_WIDTHS['id'])
+            case "filename":
+                # Configure 'filename' column
+                gb.configure_column("name", hide=False, width=c.COL_WIDTHS['name'])
             case "bytes":
                 # Configure 'bytes' column with specific width
-                gb.configure_column("bytes", hide=False, width=20)
+                gb.configure_column("bytes", hide=False, width=c.COL_WIDTHS['bytes'])
             case "created_at":
                 # Configure 'created_at' column
-                gb.configure_column("created_at", hide=False, width=40)
+                gb.configure_column("created_at", hide=False, width=c.COL_WIDTHS['datetime'])
             case _:
                 # Default configuration for any other column
                 gb.configure_column(column, hide=False)
@@ -124,17 +125,25 @@ def main():
     num_files = len(st.session_state.files)
     st.write(f"Number of files: {num_files}")
 
-    if st.button('Delete Selected'):
-        selected_rows = st.session_state.grid_response['selected_rows']
-        if not selected_rows.empty:
-            deleted_ids = [row['id'] for index, row in selected_rows.iterrows() if 'id' in row]
-            for row_id in deleted_ids:
-                st.session_state.janai.delete_file(row_id)
-            st.write("Deleted Vector Store IDs:", deleted_ids)
-            refresh_files()
-        else:
-            st.write("No rows selected for deletion.")
-
+    col1, col2, _ = st.columns([1, 1, 8])
+    
+    with col1:
+        if st.button('Delete'):
+            selected_rows = st.session_state.grid_response['selected_rows']
+            if not selected_rows.empty:
+                deleted_ids = [row['id'] for index, row in selected_rows.iterrows() if 'id' in row]
+                for row_id in deleted_ids:
+                    st.session_state.janai.delete_file(row_id)
+                st.write("Deleted Vector Store IDs:", deleted_ids)
+                refresh_files()
+            else:
+                st.write("No rows selected for deletion.")
+    
+    with col2:
+        if st.button('Reload'):
+            st.session_state.files = st.session_state.janai.list_files()
+            st.session_state.update_grid = True
+            
     st.write("---")
     st.write("## Upload File")
     uploaded_file = st.file_uploader("## Upload File", type=None, key="file_uploader")
