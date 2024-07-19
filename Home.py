@@ -49,17 +49,41 @@ def main():
     
     with assistant_grid:
         st.write("### Assistants")
+
+        st.session_state.grid_response = utils.display_assistants()
+    
+        num_assistants = len(st.session_state.assistants)
+        st.write(f"Number of assistants: {num_assistants}")
+    
+        button_col1, button_col2, _ = st.columns([1.2, 1.2,1])
+        with button_col1:
+            if st.button('Delete Assistant(s)'):
+                if 'selected_rows' in st.session_state.grid_response and st.session_state.grid_response['selected_rows'] is not None:
+                    selected_rows = st.session_state.grid_response['selected_rows']
+                    if not selected_rows.empty:
+                        deleted_ids = [row['id'] for index, row in selected_rows.iterrows() if 'id' in row]
+                        for row_id in deleted_ids:
+                            st.session_state.janai.delete_assistant(row_id)
+                        st.write("Deleted Vector Store IDs:", deleted_ids)
+                        utils.refresh_assistants()
+                    else:
+                        st.write("No rows selected for deletion.")
+    
+        with button_col2:
+            if st.button('Reload Assistants'):
+                st.session_state.assistants = st.session_state.janai.list_assistants(order='asc', limit=100)
+                st.session_state.update_grid = True
+                        
         
     with vector_store_grid:
         st.write("### Vector Stores")
 
         st.session_state.grid_response = utils.display_vector_stores()
-
-
-        col1, col2, _ = st.columns(3)
+        st.write("Number of vector stores:", len(st.session_state.vector_stores))
+        col1, col2, _ = st.columns([1,1,0.5])
         
         with col1:
-            if st.button('Delete'):
+            if st.button('Delete Vector Store(s)'):
                 # Access grid_response from session state
                 selected_rows = st.session_state.grid_response['selected_rows']
                 if not selected_rows.empty:
@@ -71,17 +95,9 @@ def main():
                 else:
                     st.write("No rows selected for deletion.")
         with col2:
-            if st.button('Reload'):
+            if st.button('Reload Vector Stores'):
                 st.session_state.files = st.session_state.janai.list_vector_stores()
                 st.session_state.update_grid = True
-
-        st.write("---")
-        st.write("## Create Vector Store")
-        st.text_input("Enter a name for the new vector store:", key="user_input")
-        if st.button("Create Vector Store"):
-            utils.create_vector_store_action()
-            utils.refresh_vector_stores()
-
 
     
     with file_grid:
@@ -90,6 +106,24 @@ def main():
         num_files = len(st.session_state.files)
         st.write(f"Number of files: {num_files}")
 
+        col1, col2, _ = st.columns([1, 1, 1.5])
+        
+        with col1:
+            if st.button('Delete File(s)'):
+                selected_rows = st.session_state.grid_response['selected_rows']
+                if not selected_rows.empty:
+                    deleted_ids = [row['id'] for index, row in selected_rows.iterrows() if 'id' in row]
+                    for row_id in deleted_ids:
+                        st.session_state.janai.delete_file(row_id)
+                    st.write("Deleted Vector Store IDs:", deleted_ids)
+                    utils.refresh_files()
+                else:
+                    st.write("No rows selected for deletion.")
+        
+        with col2:
+            if st.button('Reload Files'):
+                st.session_state.files = st.session_state.janai.list_files()
+                st.session_state.update_grid = True
     
 if __name__ == '__main__':
     main()
