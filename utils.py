@@ -102,6 +102,28 @@ class JanAIUtils:
         # This is the upper limit of this method's conversion logic.
         return f"{bytes:.2f} PB"
     
+    def delete_all_resources():
+        # Delete all assistants
+        for assistant in st.session_state.assistants:
+            st.session_state.janai.delete_assistant(assistant.id)
+        st.write("All assistants deleted.")
+
+        # Delete all vector stores
+        for vector_store in st.session_state.vector_stores:
+            st.session_state.janai.delete_vector_store(vector_store.id)
+        st.write("All vector stores deleted.")
+
+        # Delete all files
+        for file in st.session_state.files:
+            st.session_state.janai.delete_file(file.id)
+        st.write("All files deleted.")
+
+        # Refresh the lists in session state
+        st.session_state.assistants = st.session_state.janai.list_assistants()
+        st.session_state.vector_stores = st.session_state.janai.list_vector_stores()
+        st.session_state.files = st.session_state.janai.list_files()
+        st.session_state.update_grid = True
+    
     def file_hash(file):
         """
         Calculates the SHA-256 hash of a file's contents.

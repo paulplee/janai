@@ -27,14 +27,32 @@ def main():
     if 'selected_project' not in st.session_state:
         st.session_state.selected_project = list(projects.keys())[0]
 
-    # selected_project = st.selectbox("Select a Project", options=list(projects.keys()), format_func=lambda x: x[8:], index=0, on_change=lambda: st.session_state.janai.set_project(projects[st.session_state.selected_project]))
-    selected_project = st.selectbox(
-        "Select a Project",
-        options=list(projects.keys()),
-        format_func=lambda x: x[8:],
-        index=list(projects.keys()).index(st.session_state.selected_project) if st.session_state.selected_project in projects else 0,
-        on_change=lambda: st.session_state.janai.set_project(projects[st.session_state.selected_project])
-    )
+    col_projects, _, col_clear_project = st.columns([3, 5, 2])
+    with col_projects:
+
+        selected_project = st.selectbox(
+            "Select a Project",
+            options=list(projects.keys()),
+            format_func=lambda x: x[8:],
+            index=list(projects.keys()).index(st.session_state.selected_project) if st.session_state.selected_project in projects else 0,
+            on_change=lambda: st.session_state.janai.set_project(projects[st.session_state.selected_project])
+        )
+    
+    with col_clear_project:
+        if st.button('⚠️ ☢️ Clear Project ☢️⚠️'):
+            # Set a flag in session_state to show the confirmation buttons
+            st.session_state.show_confirm = True
+
+        if 'show_confirm' in st.session_state and st.session_state.show_confirm:
+            st.write("Are you sure you want to clear all resources? This action cannot be undone.")
+            if st.button("Yes, I'm sure"):
+                utils.delete_all_resources()
+                # Reset the flag to hide confirmation buttons
+                st.session_state.show_confirm = False
+            if st.button("No, cancel"):
+                # Reset the flag to hide confirmation buttons
+                st.session_state.show_confirm = False    
+                
     # Update session state and call janai.set_project if the selection changes
     if selected_project != st.session_state.selected_project:
         st.session_state.janai.set_project(projects[selected_project])
