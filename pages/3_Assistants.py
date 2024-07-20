@@ -8,9 +8,6 @@ def main():
 
     utils.init_session_state()
 
-    if 'grid_key' not in st.session_state:  # Initialize grid_key in session state
-        st.session_state.grid_key = "grid"
-
     col1, col2 = st.columns([35, 65])
         
     with col1:

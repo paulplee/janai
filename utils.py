@@ -24,7 +24,9 @@ class JanAIUtils:
             st.session_state.file_processed = False
         if 'last_file_hash' not in st.session_state:
             st.session_state.last_file_hash = ''
-            
+        if 'grid_key' not in st.session_state:  # Initialize grid_key in session state
+            st.session_state.grid_key = "grid"
+        
     @staticmethod
     def convert(obj):
         """
