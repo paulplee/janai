@@ -9,13 +9,11 @@ JanAI is a janitor for OpenAI objects. To help me maintain and clean up the mess
 5. `streamlit run Home.py`
 
 # Streamlit VSCode debugging
-Add the following configuration to the `launch.json`
+Add the following configuration to the `launch.json`.
+Make the proper adjustments for your own "program" path.
 
 ```json
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
     
