@@ -212,3 +212,5 @@ class JanAI:
             assistant_id: The unique identifier of the assistant to delete.
         """
         self.client.beta.assistants.delete(assistant_id)
+        
+    
