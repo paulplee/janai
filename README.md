@@ -8,6 +8,13 @@ JanAI is a janitor for OpenAI objects. To help me maintain and clean up the mess
 4. Add the OpenAI API key and relevant project ID's to `.env`
 5. `streamlit run Home.py`
 
+## Sample .env file:
+```
+OPENAI_API_KEY=sk-xxxxxxxxxx
+PROJECT_ONE=proj_xxxxxxxx
+OPENAI_PROJECT_ID=${PROJECT_ONE}
+```
+
 # Streamlit VSCode debugging
 Add the following configuration to the `launch.json`.
 Make the proper adjustments for your own "program" path.
